@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Validación con Expresiones Regulares</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    .is-valid ~ .valid-feedback{display:block;}
+    .is-invalid ~ .invalid-feedback{display:block;}
+  </style>
+</head>
+<body class="bg-light">
+  <div class="container py-5">
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <h3 class="mb-4">Ficha de Estudiante</h3>
+
+        <form id="formEst" novalidate>
+          <div class="row g-3">
+
+            <!-- Carnet: dos letras y tres números, p.ej. AB001 -->
+            <div class="col-md-6">
+              <label for="carnet" class="form-label">Carnet (AB001)</label>
+              <input type="text" id="carnet" class="form-control" placeholder="AB001">
+              <div class="invalid-feedback">Formato inválido. Use dos letras y tres números (p. ej., AB001).</div>
+              <div class="valid-feedback">Correcto.</div>
+            </div>
+
+            <!-- Nombre completo: solo letras y espacios (con acentos), mínimo 2 palabras -->
+            <div class="col-md-6">
+              <label for="nombre" class="form-label">Nombre completo</label>
+              <input type="text" id="nombre" class="form-control" placeholder="Nombre Apellido">
+              <div class="invalid-feedback">Solo letras y espacios, al menos dos palabras.</div>
+              <div class="valid-feedback">Correcto.</div>
+            </div>
+
+            <!-- DUI: ########-# -->
+            <div class="col-md-6">
+              <label for="dui" class="form-label">DUI</label>
+              <input type="text" id="dui" class="form-control" placeholder="01234567-8">
+              <div class="invalid-feedback">Formato inválido. Use ########-#</div>
+              <div class="valid-feedback">Correcto.</div>
+            </div>
+
+            <!-- NIT: ####-######-###-# -->
+            <div class="col-md-6">
+              <label for="nit" class="form-label">NIT</label>
+              <input type="text" id="nit" class="form-control" placeholder="0614-250791-102-3">
+              <div class="invalid-feedback">Formato inválido. Use ####-######-###-#</div>
+              <div class="valid-feedback">Correcto.</div>
+            </div>
+
+            <!-- Fecha: dd/mm/yyyy -->
+            <div class="col-md-6">
+              <label for="fecha" class="form-label">Fecha de nacimiento (dd/mm/aaaa)</label>
+              <input type="text" id="fecha" class="form-control" placeholder="31/12/2000">
+              <div class="invalid-feedback">Use un día 01-31, mes 01-12 y año 1900-2099 (dd/mm/aaaa).</div>
+              <div class="valid-feedback">Correcto.</div>
+            </div>
+
+            <!-- Correo -->
+            <div class="col-md-6">
+              <label for="correo" class="form-label">Correo electrónico</label>
+              <input type="email" id="correo" class="form-control" placeholder="usuario@dominio.com">
+              <div class="invalid-feedback">Ingrese un correo válido.</div>
+              <div class="valid-feedback">Correcto.</div>
+            </div>
+
+            <!-- Edad -->
+            <div class="col-md-6">
+              <label for="edad" class="form-label">Edad</label>
+              <input type="text" id="edad" class="form-control" placeholder="18">
+              <div class="invalid-feedback">Solo números (1 a 120).</div>
+              <div class="valid-feedback">Correcto.</div>
+            </div>
+          </div>
+
+          <div class="mt-4 d-flex gap-2">
+            <button type="submit" class="btn btn-primary">Enviar</button>
+            <button type="reset" class="btn btn-outline-secondary" id="btnLimpiar">Limpiar</button>
+          </div>
+        </form>
+
+        <hr class="my-4">
+        <pre class="mb-0"><code id="salida"></code></pre>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Patrones de validación
+    const reCarnet  = /^[A-Z]{2}\d{3}$/;                                   // AB001
+    const reNombre  = /^[\p{L}]+(?:\s+[\p{L}]+)+$/u;                        // mínimo dos palabras, letras unicode
+    const reDUI     = /^\d{8}-\d$/;                                         // ########-#
+    const reNIT     = /^\d{4}-\d{6}-\d{3}-\d$/;                              // ####-######-###-#
+    const reFecha   = /^(0[1-9]|[12]\d|3[01])\/(0[1-9]|1[0-2])\/(19|20)\d{2}$/; // dd/mm/yyyy
+    const reCorreo  = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;                      // correo simple
+    const reEdad    = /^\d+$/;                                              // solo dígitos
+
+    // Referencias a campos
+    const f = {
+      carnet: document.getElementById('carnet'),
+      nombre: document.getElementById('nombre'),
+      dui:    document.getElementById('dui'),
+      nit:    document.getElementById('nit'),
+      fecha:  document.getElementById('fecha'),
+      correo: document.getElementById('correo'),
+      edad:   document.getElementById('edad'),
+    };
+
+    // Helper: marca válido/ inválido
+    function marcar(input, ok) {
+      input.classList.toggle('is-valid', ok);
+      input.classList.toggle('is-invalid', !ok);
+    }
+
+    // Validadores por campo
+    function vCarnet(){   marcar(f.carnet, reCarnet.test(f.carnet.value.trim().toUpperCase())); }
+    function vNombre(){   marcar(f.nombre, reNombre.test(f.nombre.value.trim())); }
+    function vDUI(){      marcar(f.dui,    reDUI.test(f.dui.value.trim())); }
+    function vNIT(){      marcar(f.nit,    reNIT.test(f.nit.value.trim())); }
+    function vFecha(){    marcar(f.fecha,  reFecha.test(f.fecha.value.trim())); }
+    function vCorreo(){   marcar(f.correo, reCorreo.test(f.correo.value.trim())); }
+    function vEdad(){
+      const ok = reEdad.test(f.edad.value.trim());
+      if(!ok){ return marcar(f.edad,false); }
+      const n = parseInt(f.edad.value,10);
+      marcar(f.edad, n>=1 && n<=120);
+    }
+
+    // Validación en vivo
+    f.carnet.addEventListener('input', vCarnet);
+    f.nombre.addEventListener('input', vNombre);
+    f.dui.addEventListener('input', vDUI);
+    f.nit.addEventListener('input', vNIT);
+    f.fecha.addEventListener('input', vFecha);
+    f.correo.addEventListener('input', vCorreo);
+    f.edad.addEventListener('input', vEdad);
+
+    // Envío del formulario
+    document.getElementById('formEst').addEventListener('submit', (e)=>{
+      e.preventDefault();
+      vCarnet(); vNombre(); vDUI(); vNIT(); vFecha(); vCorreo(); vEdad();
+
+      const todoOk = document.querySelectorAll('.is-invalid').length === 0 &&
+                     Object.values(f).every(el => el.value.trim() !== '');
+
+      const out = document.getElementById('salida');
+      if (todoOk) {
+        out.textContent =
+`✔ Datos válidos:
+Carnet: ${f.carnet.value}
+Nombre: ${f.nombre.value}
+DUI: ${f.dui.value}
+NIT: ${f.nit.value}
+Fecha: ${f.fecha.value}
+Correo: ${f.correo.value}
+Edad: ${f.edad.value}`;
+      } else {
+        out.textContent = '⚠ Revise los campos marcados en rojo.';
+      }
+    });
+
+    // Limpiar estilos al reset
+    document.getElementById('btnLimpiar').addEventListener('click', ()=>{
+      Object.values(f).forEach(el => el.classList.remove('is-valid','is-invalid'));
+      document.getElementById('salida').textContent = '';
+    });
+  </script>
+</body>
+</html>
